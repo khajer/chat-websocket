@@ -9,7 +9,7 @@ struct Version {
 #[get("/version")]
 async fn version() -> Result<impl Responder> {
     let version = Version {
-        version: "1.0.0".to_string(),
+        version: "0.0.1".to_string(),
     };
     Ok(web::Json(version))
 }
