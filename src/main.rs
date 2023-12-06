@@ -1,6 +1,7 @@
 use actix::{Actor, StreamHandler};
 use actix_web::{get, web, Error, HttpRequest, HttpResponse, Responder, Result};
 use actix_web_actors::ws;
+
 use serde::Serialize;
 
 #[derive(Serialize)]
@@ -23,15 +24,34 @@ impl Actor for MyWs {
 impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for MyWs {
     fn handle(&mut self, msg: Result<ws::Message, ws::ProtocolError>, ctx: &mut Self::Context) {
         match msg {
-            Ok(ws::Message::Ping(msg)) => ctx.pong(&msg),
-            Ok(ws::Message::Text(text)) => ctx.text(text),
-            Ok(ws::Message::Binary(bin)) => ctx.binary(bin),
+            Ok(ws::Message::Ping(msg)) => {
+                ctx.pong(&msg);
+                println!("byte");
+            }
+            Ok(ws::Message::Text(text)) => {
+                println!("byte message");
+                ws_message(ctx, text.to_string());
+            }
+            Ok(ws::Message::Binary(bin)) => {
+                print!("Binary");
+                ctx.binary(bin);
+            }
             _ => (),
         }
     }
 }
+
+fn ws_message(ctx: &mut ws::WebsocketContext<MyWs>, text: String) {
+    println!("receive: '{}'", text);
+    if text == "" {
+        ctx.text("text1");
+    } else {
+        ctx.text("text2");
+    }
+}
 async fn index(req: HttpRequest, stream: web::Payload) -> Result<HttpResponse, Error> {
     let resp = ws::start(MyWs {}, &req, stream);
+
     println!("{:?}", resp);
     resp
 }
