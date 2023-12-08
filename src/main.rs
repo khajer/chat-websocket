@@ -17,12 +17,26 @@ async fn version() -> Result<impl Responder> {
     Ok(web::Json(version))
 }
 
-struct MyWs;
+struct MyWs {
+    clients_vec: Vec<*mut ws::WebsocketContext<MyWs>>,
+}
 impl Actor for MyWs {
     type Context = ws::WebsocketContext<Self>;
+
+    fn started(&mut self, ctx: &mut Self::Context) {
+        println!("WebSocket connected");
+        self.clients_vec.push(ctx);
+    }
+    fn stopped(&mut self, ctx: &mut Self::Context) {
+        println!("WebSocket stopped");
+        let idx = self.clients_vec.iter().position(|&c| c == ctx).unwrap();
+        self.clients_vec.remove(idx);
+    }
 }
 impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for MyWs {
     fn handle(&mut self, msg: Result<ws::Message, ws::ProtocolError>, ctx: &mut Self::Context) {
+        println!("message handles>>");
+
         match msg {
             Ok(ws::Message::Ping(msg)) => {
                 ctx.pong(&msg);
@@ -33,8 +47,14 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for MyWs {
                 ws_message(ctx, text.to_string());
             }
             Ok(ws::Message::Binary(bin)) => {
-                print!("Binary");
+                println!("Binary");
                 ctx.binary(bin);
+            }
+            Ok(ws::Message::Close(reason)) => {
+                println!("Close");
+                // let idx = self.clients_vec.iter().position(|&c| c == ctx).unwrap();
+                // self.clients_vec.remove(idx);
+                ctx.close(reason);
             }
             _ => (),
         }
@@ -49,8 +69,15 @@ fn ws_message(ctx: &mut ws::WebsocketContext<MyWs>, text: String) {
         ctx.text("text2");
     }
 }
+
 async fn index(req: HttpRequest, stream: web::Payload) -> Result<HttpResponse, Error> {
-    let resp = ws::start(MyWs {}, &req, stream);
+    let resp = ws::start(
+        MyWs {
+            clients_vec: vec![],
+        },
+        &req,
+        stream,
+    );
 
     println!("{:?}", resp);
     resp
