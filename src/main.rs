@@ -27,6 +27,11 @@ impl Actor for MyWs {
         println!("WebSocket connected");
         self.clients_vec.push(ctx);
     }
+    fn stopped(&mut self, ctx: &mut Self::Context) {
+        println!("WebSocket stopped");
+        let idx = self.clients_vec.iter().position(|&c| c == ctx).unwrap();
+        self.clients_vec.remove(idx);
+    }
 }
 impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for MyWs {
     fn handle(&mut self, msg: Result<ws::Message, ws::ProtocolError>, ctx: &mut Self::Context) {
@@ -47,8 +52,8 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for MyWs {
             }
             Ok(ws::Message::Close(reason)) => {
                 println!("Close");
-                let idx = self.clients_vec.iter().position(|&c| c == ctx).unwrap();
-                self.clients_vec.remove(idx);
+                // let idx = self.clients_vec.iter().position(|&c| c == ctx).unwrap();
+                // self.clients_vec.remove(idx);
                 ctx.close(reason);
             }
             _ => (),
@@ -64,6 +69,7 @@ fn ws_message(ctx: &mut ws::WebsocketContext<MyWs>, text: String) {
         ctx.text("text2");
     }
 }
+
 async fn index(req: HttpRequest, stream: web::Payload) -> Result<HttpResponse, Error> {
     let resp = ws::start(
         MyWs {
