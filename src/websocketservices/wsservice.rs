@@ -43,8 +43,16 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for MyWs {
     }
 }
 
+fn testing() -> bool {
+    true
+}
 #[cfg(test)]
 #[test]
 fn exploration() {
     assert_eq!(2 + 2, 4);
+}
+
+#[test]
+fn check() {
+    assert_eq!(testing(), true);
 }
