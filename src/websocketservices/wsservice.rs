@@ -9,8 +9,7 @@ pub struct MyWs {
 
 impl MyWs {
     fn receive_message(&mut self, ctx: &mut ws::WebsocketContext<MyWs>, text: String) {
-        let cmd = message_service::parse_message_command(text);
-
+        let cmd = message_service::parse_message_command(text.as_str());
         match cmd {
             message_service::Message::LOBBY => {
                 let name = "xx".to_string();
@@ -58,16 +57,16 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for MyWs {
     }
 }
 
-fn testing() -> bool {
-    true
-}
-#[cfg(test)]
-#[test]
-fn exploration() {
-    assert_eq!(2 + 2, 4);
-}
+// fn testing() -> bool {
+//     true
+// }
+// #[cfg(test)]
+// #[test]
+// fn exploration() {
+//     assert_eq!(2 + 2, 4);
+// }
 
-#[test]
-fn check() {
-    assert_eq!(testing(), true);
-}
+// #[test]
+// fn check() {
+//     assert_eq!(testing(), true);
+// }
