@@ -85,4 +85,13 @@ mod test {
         let result = parse_message_command(txt_json);
         assert_eq!(result, Message::CHAT);
     }
+    #[test]
+    pub fn test_parse_string_to_join() {
+        let txt_json = r#"{
+            "cmd":"join"
+        }"#;
+        parse_message_command(txt_json);
+        let result = parse_message_command(txt_json);
+        assert_eq!(result, Message::JOIN);
+    }
 }
