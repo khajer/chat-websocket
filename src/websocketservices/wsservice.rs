@@ -1,19 +1,37 @@
-use std::collections::HashMap;
-
+use super::message_service;
 use actix::{Actor, StreamHandler};
 use actix_web_actors::ws;
+use std::collections::HashMap;
 
 pub struct MyWs {
     pub lobby_players: HashMap<String, *mut ws::WebsocketContext<MyWs>>,
 }
+
 impl MyWs {
     fn receive_message(&mut self, ctx: &mut ws::WebsocketContext<MyWs>, text: String) {
-        let name = "".to_string();
+        let cmd = message_service::parse_message_command(text);
 
-        self.lobby_players.insert(name, ctx);
-        ctx.text(text.to_string());
+        match cmd {
+            message_service::Message::LOBBY => {
+                let name = "xx".to_string();
+                self.lobby_players.insert(name, ctx);
+
+                print!("join lobby");
+            }
+            message_service::Message::CHAT => {
+                let message = "hi ".to_string();
+                ctx.text(message);
+            }
+            message_service::Message::JOIN => {
+                print!("join room");
+            }
+            _ => {
+                print!("test");
+            }
+        };
     }
 }
+
 impl Actor for MyWs {
     type Context = ws::WebsocketContext<Self>;
 }
@@ -22,14 +40,11 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for MyWs {
         match msg {
             Ok(ws::Message::Ping(msg)) => {
                 ctx.pong(&msg);
-                // println!("byte");
             }
             Ok(ws::Message::Text(text)) => {
-                // println!("byte message");
                 self.receive_message(ctx, text.to_string());
             }
             Ok(ws::Message::Binary(bin)) => {
-                println!("Binary");
                 ctx.binary(bin);
             }
             Ok(ws::Message::Close(reason)) => {
