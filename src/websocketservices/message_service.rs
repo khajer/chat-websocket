@@ -76,4 +76,13 @@ mod test {
         let result = parse_message_command(txt_json);
         assert_eq!(result, Message::LOBBY);
     }
+    #[test]
+    pub fn test_parse_string_to_room() {
+        let txt_json = r#"{
+            "cmd":"chat"
+        }"#;
+        parse_message_command(txt_json);
+        let result = parse_message_command(txt_json);
+        assert_eq!(result, Message::CHAT);
+    }
 }
