@@ -10,24 +10,20 @@ pub struct MyWs {
 impl MyWs {
     fn receive_message(&mut self, ctx: &mut ws::WebsocketContext<MyWs>, text: String) {
         let msg_input = message_service::parse_message_command(text.as_str());
-        match msg_input.cmd {
-            // message_service::Message::LOBBY => {
-            //     let name = "xx".to_string();
-            //     self.lobby_players.insert(name, ctx);
-
-            //     print!("join lobby");
-            // }
-            // message_service::Message::CHAT => {
-            //     let message = "hi ".to_string();
-            //     ctx.text(message);
-            // }
-            // message_service::Message::JOIN => {
-            //     print!("join room");
-            // }
+        match msg_input.cmd.as_str() {
+            "lobby" => {
+                let params = msg_input.params.unwrap();
+                println!("name login : {}", params["name"]);
+                self.assign_to_lobby(params["name"].to_string(), ctx);
+            }
             _ => {
-                print!("unknown cmd ");
+                println!("unknown cmd ");
             }
         };
+    }
+    fn assign_to_lobby(&mut self, name: String, ctx: &mut ws::WebsocketContext<MyWs>) {
+        println!("{} assign to lobby", name);
+        self.lobby_players.insert(name, ctx);
     }
 }
 
