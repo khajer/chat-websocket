@@ -9,23 +9,23 @@ pub struct MyWs {
 
 impl MyWs {
     fn receive_message(&mut self, ctx: &mut ws::WebsocketContext<MyWs>, text: String) {
-        let cmd = message_service::parse_message_command(text.as_str());
-        match cmd {
-            message_service::Message::LOBBY => {
-                let name = "xx".to_string();
-                self.lobby_players.insert(name, ctx);
+        let msg_input = message_service::parse_message_command(text.as_str());
+        match msg_input.cmd {
+            // message_service::Message::LOBBY => {
+            //     let name = "xx".to_string();
+            //     self.lobby_players.insert(name, ctx);
 
-                print!("join lobby");
-            }
-            message_service::Message::CHAT => {
-                let message = "hi ".to_string();
-                ctx.text(message);
-            }
-            message_service::Message::JOIN => {
-                print!("join room");
-            }
+            //     print!("join lobby");
+            // }
+            // message_service::Message::CHAT => {
+            //     let message = "hi ".to_string();
+            //     ctx.text(message);
+            // }
+            // message_service::Message::JOIN => {
+            //     print!("join room");
+            // }
             _ => {
-                print!("test");
+                print!("unknown cmd ");
             }
         };
     }
@@ -47,7 +47,6 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for MyWs {
                 ctx.binary(bin);
             }
             Ok(ws::Message::Close(reason)) => {
-                println!("Close");
                 // let idx = self.clients_vec.iter().position(|&c| c == ctx).unwrap();
                 // self.clients_vec.remove(idx);
                 ctx.close(reason);
