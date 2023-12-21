@@ -4,18 +4,20 @@ use actix_web_actors::ws;
 use rand::Rng;
 use sha2::{Digest, Sha256};
 
-use std::collections::HashMap;
+// use std::collections::HashMap;
 
 pub struct MyWs {
-    pub lobby_players: HashMap<String, *mut ws::WebsocketContext<MyWs>>,
+    // pub lobby_players: HashMap<String, *mut ws::WebsocketContext<MyWs>>,
     pub session_id: String,
+    pub name: String,
 }
 
 impl MyWs {
     pub fn new() -> MyWs {
         MyWs {
-            lobby_players: HashMap::new(),
+            // lobby_players: HashMap::new(),
             session_id: "".to_string(),
+            name: "".to_string(),
         }
     }
     fn receive_message(&mut self, ctx: &mut ws::WebsocketContext<MyWs>, text: String) {
@@ -24,12 +26,15 @@ impl MyWs {
         match msg_input.cmd.as_str() {
             "lobby" => {
                 let params = msg_input.params.unwrap();
+
+                self.name = params["name"].to_string();
+
                 println!(
                     "name login : {}, session_id : {}",
-                    params["name"], self.session_id
+                    self.name, self.session_id
                 );
 
-                self.assign_to_lobby(params["name"].to_string(), ctx);
+                self.assign_to_room(ctx);
             }
             "chat" => {
                 let params = msg_input.params.unwrap();
@@ -40,9 +45,9 @@ impl MyWs {
             }
         };
     }
-    fn assign_to_lobby(&mut self, name: String, ctx: &mut ws::WebsocketContext<MyWs>) {
-        println!("{} assign to lobby", name);
-        self.lobby_players.insert(name, ctx);
+    fn assign_to_room(&mut self, ctx: &mut ws::WebsocketContext<MyWs>) {
+        println!("{} assign to lobby", "5");
+        // self.lobby_players.insert(name, ctx);
     }
 }
 

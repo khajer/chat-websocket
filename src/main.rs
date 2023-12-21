@@ -19,6 +19,7 @@ async fn version() -> Result<impl Responder> {
 
 async fn index(req: HttpRequest, stream: web::Payload) -> Result<HttpResponse, Error> {
     let resp = ws::start(websocketservices::wsservice::MyWs::new(), &req, stream);
+
     // println!("{:?}", resp);
     resp
 }
@@ -26,9 +27,11 @@ async fn index(req: HttpRequest, stream: web::Payload) -> Result<HttpResponse, E
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     use actix_web::{App, HttpServer};
+    let rooms = websocketservices::rooms::new();
 
-    HttpServer::new(|| {
+    HttpServer::new(move || {
         App::new()
+            .app_data(web::Data::new(rooms.clone()))
             .service(version)
             .route("/ws", web::get().to(index))
     })
