@@ -22,6 +22,8 @@ pub fn parse_message_command(str: &str) -> MessageInput {
 }
 
 ////////////////////////
+///
+#[cfg(test)]
 mod test {
     use super::*;
 

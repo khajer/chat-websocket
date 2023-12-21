@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use actix_web::{get, web, Error, HttpRequest, HttpResponse, Responder, Result};
 use actix_web_actors::ws;
 use serde::Serialize;
@@ -20,15 +18,8 @@ async fn version() -> Result<impl Responder> {
 }
 
 async fn index(req: HttpRequest, stream: web::Payload) -> Result<HttpResponse, Error> {
-    let resp = ws::start(
-        websocketservices::wsservice::MyWs {
-            lobby_players: HashMap::new(),
-        },
-        &req,
-        stream,
-    );
-
-    println!("{:?}", resp);
+    let resp = ws::start(websocketservices::wsservice::MyWs::new(), &req, stream);
+    // println!("{:?}", resp);
     resp
 }
 

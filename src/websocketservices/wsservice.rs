@@ -1,20 +1,39 @@
 use super::message_service;
 use actix::{Actor, StreamHandler};
 use actix_web_actors::ws;
+use rand::Rng;
+use sha2::{Digest, Sha256};
+
 use std::collections::HashMap;
 
 pub struct MyWs {
     pub lobby_players: HashMap<String, *mut ws::WebsocketContext<MyWs>>,
+    pub session_id: String,
 }
 
 impl MyWs {
+    pub fn new() -> MyWs {
+        MyWs {
+            lobby_players: HashMap::new(),
+            session_id: "".to_string(),
+        }
+    }
     fn receive_message(&mut self, ctx: &mut ws::WebsocketContext<MyWs>, text: String) {
+        println!("[session_id:{}][message]: {}", self.session_id, text);
         let msg_input = message_service::parse_message_command(text.as_str());
         match msg_input.cmd.as_str() {
             "lobby" => {
                 let params = msg_input.params.unwrap();
-                println!("name login : {}", params["name"]);
+                println!(
+                    "name login : {}, session_id : {}",
+                    params["name"], self.session_id
+                );
+
                 self.assign_to_lobby(params["name"].to_string(), ctx);
+            }
+            "chat" => {
+                let params = msg_input.params.unwrap();
+                println!("{:}", params);
             }
             _ => {
                 println!("unknown cmd ");
@@ -29,6 +48,13 @@ impl MyWs {
 
 impl Actor for MyWs {
     type Context = ws::WebsocketContext<Self>;
+    fn started(&mut self, _ctx: &mut Self::Context) {
+        self.session_id = generate_session_id();
+        println!(
+            "WebSocket connection started with session ID: {}",
+            self.session_id
+        );
+    }
 }
 impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for MyWs {
     fn handle(&mut self, msg: Result<ws::Message, ws::ProtocolError>, ctx: &mut Self::Context) {
@@ -51,17 +77,24 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for MyWs {
         }
     }
 }
+fn generate_session_id() -> String {
+    let mut rng = rand::thread_rng();
+    let random_number: usize = rng.gen();
 
-// fn testing() -> bool {
-//     true
-// }
-// #[cfg(test)]
-// #[test]
-// fn exploration() {
-//     assert_eq!(2 + 2, 4);
-// }
+    let mut hasher = Sha256::new();
+    hasher.update(random_number.to_string());
+    let hash_result = hasher.finalize();
 
-// #[test]
-// fn check() {
-//     assert_eq!(testing(), true);
-// }
+    format!("{:x}", hash_result)
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn generate_session_id_test() {
+        println!("session_id: {}", generate_session_id());
+        assert_eq!(3, 3);
+    }
+}
