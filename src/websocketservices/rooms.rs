@@ -1,17 +1,26 @@
 use std::collections::HashMap;
 
 #[derive(Clone)]
-pub struct Rooms {
-    rooms: HashMap<String, String>,
+pub struct RoomMgr {
+    pub rooms: HashMap<String, Room>,
+    pub cnt: u32,
 }
 
-impl Rooms {
-    pub fn count() -> u32 {
-        0
+#[derive(Clone)]
+pub struct Room {
+    pub name: String,
+}
+
+impl RoomMgr {
+    pub fn show(&mut self) {
+        self.cnt += 1;
+
+        println!("{}", self.cnt);
     }
 }
-pub fn new() -> Rooms {
-    Rooms {
+pub fn new() -> RoomMgr {
+    RoomMgr {
         rooms: HashMap::new(),
+        cnt: 0,
     }
 }

@@ -1,6 +1,13 @@
-use actix_web::{get, web, Error, HttpRequest, HttpResponse, Responder, Result};
+use std::sync::Mutex;
+
+use actix_web::{
+    get,
+    web::{self, Data},
+    Error, HttpRequest, HttpResponse, Responder, Result,
+};
 use actix_web_actors::ws;
 use serde::Serialize;
+use websocketservices::rooms::RoomMgr;
 
 mod websocketservices;
 
@@ -17,7 +24,13 @@ async fn version() -> Result<impl Responder> {
     Ok(web::Json(version))
 }
 
-async fn index(req: HttpRequest, stream: web::Payload) -> Result<HttpResponse, Error> {
+async fn index(
+    req: HttpRequest,
+    stream: web::Payload,
+    data: Data<Mutex<RoomMgr>>,
+) -> Result<HttpResponse, Error> {
+    let mut r = data.lock().unwrap();
+    r.show();
     let resp = ws::start(websocketservices::wsservice::MyWs::new(), &req, stream);
 
     // println!("{:?}", resp);
@@ -27,11 +40,11 @@ async fn index(req: HttpRequest, stream: web::Payload) -> Result<HttpResponse, E
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     use actix_web::{App, HttpServer};
-    let rooms = websocketservices::rooms::new();
-
+    let r_mgr = websocketservices::rooms::new();
+    let data = Data::new(Mutex::new(r_mgr));
     HttpServer::new(move || {
         App::new()
-            .app_data(web::Data::new(rooms.clone()))
+            .app_data(Data::clone(&data))
             .service(version)
             .route("/ws", web::get().to(index))
     })

@@ -1,4 +1,9 @@
-use super::message_service;
+use std::collections::HashMap;
+
+use super::{
+    message_service,
+    rooms::{Room, RoomMgr},
+};
 use actix::{Actor, StreamHandler};
 use actix_web_actors::ws;
 use rand::Rng;
