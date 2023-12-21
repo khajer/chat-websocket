@@ -29,9 +29,13 @@ async fn index(
     stream: web::Payload,
     data: Data<Mutex<RoomMgr>>,
 ) -> Result<HttpResponse, Error> {
-    let mut r = data.lock().unwrap();
-    r.show();
-    let resp = ws::start(websocketservices::wsservice::MyWs::new(), &req, stream);
+    let r = data.lock().unwrap();
+    // r.cnt += 1;
+    // println!("{}", r.cnt);
+
+    // let mut room = r.clone();
+
+    let resp = ws::start(websocketservices::wsservice::MyWs::new(r), &req, stream);
 
     // println!("{:?}", resp);
     resp

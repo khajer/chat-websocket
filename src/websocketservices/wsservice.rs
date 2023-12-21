@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, sync::MutexGuard};
 
 use super::{
     message_service,
@@ -18,7 +18,8 @@ pub struct MyWs {
 }
 
 impl MyWs {
-    pub fn new() -> MyWs {
+    pub fn new(mut r: MutexGuard<'_, RoomMgr>) -> MyWs {
+        r.show();
         MyWs {
             // lobby_players: HashMap::new(),
             session_id: "".to_string(),
