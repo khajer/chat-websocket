@@ -1,3 +1,3 @@
 pub mod message_service;
-pub mod rooms;
-pub mod wsservice;
+pub mod server;
+pub mod session;
