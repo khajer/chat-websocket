@@ -6,7 +6,7 @@ use actix_web::{
 };
 use actix_web_actors::ws;
 use serde::Serialize;
-use websocketservices::server::WSServer;
+use websocketservices::wsserver::WSServer;
 
 mod websocketservices;
 
@@ -42,7 +42,7 @@ async fn index(
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    let server = websocketservices::server::WSServer::new().start();
+    let server = websocketservices::wsserver::WSServer::new().start();
     use actix_web::{App, HttpServer};
     HttpServer::new(move || {
         App::new()

@@ -1,6 +1,6 @@
-use crate::websocketservices::server::LOBBY;
+use crate::websocketservices::wsserver::LOBBY;
 
-use super::{message_service, server::WSServer};
+use super::{message_service, wsserver::WSServer};
 use actix::{Actor, Addr, StreamHandler};
 use actix_web_actors::ws;
 use rand::Rng;
