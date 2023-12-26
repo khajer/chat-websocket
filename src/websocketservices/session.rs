@@ -13,7 +13,7 @@ pub struct Session {
 }
 
 impl Session {
-    fn receive_message(&mut self, ctx: &mut ws::WebsocketContext<Session>, text: String) {
+    fn receive_message(&mut self, _ctx: &mut ws::WebsocketContext<Session>, text: String) {
         println!("[session_id:{}][message]: {}", self.session_id, text);
 
         let msg_input = message_service::parse_message_command(text.as_str());
@@ -24,7 +24,7 @@ impl Session {
                 let msg = LOBBY {
                     name: "kha".to_string(),
                 };
-                // self.addr.do_send(msg);
+                self.addr.do_send(msg);
                 println!(
                     "name login : {}, session_id : {}",
                     self.name, self.session_id

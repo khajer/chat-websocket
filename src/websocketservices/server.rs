@@ -1,24 +1,18 @@
+use actix::prelude::*;
 use actix::{Actor, Message, StreamHandler};
 use actix_web_actors::ws::{self};
 
-// #[derive(Message)]
-// #[rtype()]
-// pub struct LOBBY {
-//     pub addr: Recipient<Message>,
-// }
 #[derive(Message)]
 #[rtype(result = "()")]
 pub struct LOBBY {
     pub name: String,
 }
 
-pub struct WSServer {
-    total: u16,
-}
+pub struct WSServer {}
 
 impl WSServer {
     pub fn new() -> WSServer {
-        WSServer { total: 0 }
+        WSServer {}
     }
 }
 
@@ -30,17 +24,14 @@ impl Actor for WSServer {
 }
 
 impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for WSServer {
-    fn handle(&mut self, msg: Result<ws::Message, ws::ProtocolError>, ctx: &mut Self::Context) {
+    fn handle(&mut self, _msg: Result<ws::Message, ws::ProtocolError>, _ctx: &mut Self::Context) {
         println!("In comming Server");
     }
 }
 
-// impl Handler<LOBBY> for Server {
-//     type Result = String;
-//     fn handle(&mut self, msg: Message, _: &mut Context<Self>) -> Self::Result {
-//         format!("Received: {}", msg.content)
-//     }
-// }
-// impl Handler fro WSServer{
-
-// }
+impl Handler<LOBBY> for WSServer {
+    type Result = ();
+    fn handle(&mut self, msg: LOBBY, _: &mut Context<Self>) -> Self::Result {
+        println!("Received: {}", msg.name)
+    }
+}
