@@ -1,4 +1,6 @@
-use super::{message_service, server::Server};
+use crate::websocketservices::server::LOBBY;
+
+use super::{message_service, server::WSServer};
 use actix::{Actor, Addr, StreamHandler};
 use actix_web_actors::ws;
 use rand::Rng;
@@ -7,19 +9,22 @@ use sha2::{Digest, Sha256};
 pub struct Session {
     pub session_id: String,
     pub name: String,
-    pub addr: Addr<Server>,
+    pub addr: Addr<WSServer>,
 }
 
 impl Session {
     fn receive_message(&mut self, ctx: &mut ws::WebsocketContext<Session>, text: String) {
         println!("[session_id:{}][message]: {}", self.session_id, text);
+
         let msg_input = message_service::parse_message_command(text.as_str());
         match msg_input.cmd.as_str() {
             "lobby" => {
                 let params = msg_input.params.unwrap();
-
                 self.name = params["name"].to_string();
-
+                let msg = LOBBY {
+                    name: "kha".to_string(),
+                };
+                // self.addr.do_send(msg);
                 println!(
                     "name login : {}, session_id : {}",
                     self.name, self.session_id

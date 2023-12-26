@@ -6,7 +6,7 @@ use actix_web::{
 };
 use actix_web_actors::ws;
 use serde::Serialize;
-use websocketservices::server::Server;
+use websocketservices::server::WSServer;
 
 mod websocketservices;
 
@@ -26,7 +26,7 @@ async fn version() -> Result<impl Responder> {
 async fn index(
     req: HttpRequest,
     stream: web::Payload,
-    srv: web::Data<Addr<Server>>,
+    srv: web::Data<Addr<WSServer>>,
 ) -> Result<HttpResponse, Error> {
     let resp = ws::start(
         websocketservices::session::Session {
@@ -42,7 +42,7 @@ async fn index(
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    let server = websocketservices::server::Server::new().start();
+    let server = websocketservices::server::WSServer::new().start();
     use actix_web::{App, HttpServer};
     HttpServer::new(move || {
         App::new()
