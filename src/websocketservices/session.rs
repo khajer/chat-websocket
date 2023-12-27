@@ -1,11 +1,16 @@
+use std::time::Duration;
+
 use crate::websocketservices::wsserver::LOBBY;
 
+use super::wsserver::DISCONNECT;
 use super::{message_service, wsserver::WSServer};
 use actix::prelude::*;
 use actix::{Actor, Addr, AsyncContext, StreamHandler};
 use actix_web_actors::ws;
 use rand::Rng;
 use sha2::{Digest, Sha256};
+
+const HEARTBEAT_INTERVAL: Duration = Duration::from_secs(5);
 
 pub struct Session {
     pub session_id: String,
@@ -31,6 +36,11 @@ impl Handler<SessionMessage> for Session {
 }
 
 impl Session {
+    fn hb(&self, ctx: &mut ws::WebsocketContext<Self>) {
+        ctx.run_interval(HEARTBEAT_INTERVAL, |act, ctx| {
+            println!("hearbeat check");
+        });
+    }
     fn receive_message(&mut self, ctx: &mut ws::WebsocketContext<Session>, text: String) {
         println!("[session_id:{}][message]: {}", self.session_id, text);
         let msg_input = message_service::parse_message_command(text.as_str());
@@ -61,12 +71,21 @@ impl Session {
 
 impl Actor for Session {
     type Context = ws::WebsocketContext<Self>;
-    fn started(&mut self, _ctx: &mut Self::Context) {
+    fn started(&mut self, ctx: &mut Self::Context) {
+        self.hb(ctx);
         self.session_id = generate_session_id();
         println!(
             "WebSocket connection started with session ID: {}",
             self.session_id
         );
+    }
+    fn stopping(&mut self, ctx: &mut Self::Context) -> Running {
+        let msg = DISCONNECT {
+            name: "test".to_string(),
+            addr: ctx.address(),
+        };
+        self.addr.do_send(msg);
+        Running::Stop
     }
 }
 impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for Session {
@@ -82,8 +101,6 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for Session {
                 ctx.binary(bin);
             }
             Ok(ws::Message::Close(reason)) => {
-                // let idx = self.clients_vec.iter().position(|&c| c == ctx).unwrap();
-                // self.clients_vec.remove(idx);
                 ctx.close(reason);
             }
             _ => (),
