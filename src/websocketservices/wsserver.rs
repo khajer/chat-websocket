@@ -13,6 +13,13 @@ pub struct LOBBY {
     pub addr: Addr<Session>,
 }
 
+#[derive(Message)]
+#[rtype(result = "()")]
+pub struct DISCONNECT {
+    pub name: String,
+    pub addr: Addr<Session>,
+}
+
 pub struct WSServer {}
 
 impl WSServer {
@@ -42,5 +49,16 @@ impl Handler<LOBBY> for WSServer {
             message: "oK".to_string(),
         };
         msg.addr.do_send(msg_out);
+    }
+}
+
+impl Handler<DISCONNECT> for WSServer {
+    type Result = ();
+    fn handle(&mut self, msg: DISCONNECT, _: &mut Context<Self>) -> Self::Result {
+        println!("DISCONNECT: {}", msg.name);
+        // let msg_out = SessionMessage {
+        //     message: "oK".to_string(),
+        // };
+        // msg.addr.do_send(msg_out);
     }
 }
