@@ -1,3 +1,5 @@
+// use std::collections::HashMap;
+
 use actix::prelude::*;
 use actix::{Actor, Message, StreamHandler};
 use actix_web_actors::ws::{self};
@@ -8,19 +10,23 @@ use super::session::Session;
 
 #[derive(Message)]
 #[rtype(result = "()")]
-pub struct LOBBY {
+pub struct JoinRoom {
     pub name: String,
-    pub addr: Addr<Session>,
+    pub addr: Recipient<SessionMessage>,
 }
 
 #[derive(Message)]
 #[rtype(result = "()")]
 pub struct DISCONNECT {
     pub name: String,
-    pub addr: Addr<Session>,
+    // pub addr: Addr<Session>,
+    pub addr: Recipient<SessionMessage>,
 }
 
-pub struct WSServer {}
+pub struct WSServer {
+    // sessions: HashMap<usize, Recipient<Message>>,
+    // rooms: HashMap<String, HashSet<usize>>,
+}
 
 impl WSServer {
     pub fn new() -> WSServer {
@@ -41,14 +47,16 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for WSServer {
     }
 }
 
-impl Handler<LOBBY> for WSServer {
+impl Handler<JoinRoom> for WSServer {
     type Result = ();
-    fn handle(&mut self, msg: LOBBY, _: &mut Context<Self>) -> Self::Result {
+    fn handle(&mut self, msg: JoinRoom, _: &mut Context<Self>) -> Self::Result {
         println!("Received: {}", msg.name);
         let msg_out = SessionMessage {
-            message: "oK".to_string(),
+            message: "join room ".to_string(),
         };
-        msg.addr.do_send(msg_out);
+        let addr = msg.addr.do_send(msg_out);
+
+        // msg.addr.do_send(msg_out);
     }
 }
 
@@ -56,9 +64,5 @@ impl Handler<DISCONNECT> for WSServer {
     type Result = ();
     fn handle(&mut self, msg: DISCONNECT, _: &mut Context<Self>) -> Self::Result {
         println!("DISCONNECT: {}", msg.name);
-        // let msg_out = SessionMessage {
-        //     message: "oK".to_string(),
-        // };
-        // msg.addr.do_send(msg_out);
     }
 }

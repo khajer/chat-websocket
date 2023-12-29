@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use crate::websocketservices::wsserver::LOBBY;
+use crate::websocketservices::wsserver::JoinRoom;
 
 use super::wsserver::DISCONNECT;
 use super::{message_service, wsserver::WSServer};
@@ -45,25 +45,34 @@ impl Session {
         println!("[session_id:{}][message]: {}", self.session_id, text);
         let msg_input = message_service::parse_message_command(text.as_str());
         match msg_input.cmd.as_str() {
-            "lobby" => {
+            "joinroom" => {
+                println!("join room");
                 let params = msg_input.params.unwrap();
-                self.name = params["name"].to_string();
-                let msg = LOBBY {
-                    name: "kha".to_string(),
-                    addr: ctx.address(),
+                let msg = JoinRoom {
+                    name: params["name"].to_string(),
+                    addr: ctx.address().recipient(),
                 };
                 self.addr.do_send(msg);
-                println!(
-                    "name login : {}, session_id : {}",
-                    self.name, self.session_id
-                );
             }
+            // "lobby" => {
+            //     let params = msg_input.params.unwrap();
+            //     self.name = params["name"].to_string();
+            //     let msg = LOBBY {
+            //         name: "kha".to_string(),
+            //         addr: ctx.address(),
+            //     };
+            //     self.addr.do_send(msg);
+            //     println!(
+            //         "name login : {}, session_id : {}",
+            //         self.name, self.session_id
+            //     );
+            // }
             "chat" => {
                 let params = msg_input.params.unwrap();
                 println!("{:}", params);
             }
             _ => {
-                println!("unknown cmd ");
+                println!("unknown cmd");
             }
         };
     }
@@ -82,7 +91,7 @@ impl Actor for Session {
     fn stopping(&mut self, ctx: &mut Self::Context) -> Running {
         let msg = DISCONNECT {
             name: "test".to_string(),
-            addr: ctx.address(),
+            addr: ctx.address().recipient(),
         };
         self.addr.do_send(msg);
         Running::Stop
