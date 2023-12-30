@@ -1,4 +1,4 @@
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 use crate::websocketservices::wsserver::JoinRoom;
 
@@ -11,10 +11,13 @@ use rand::Rng;
 use sha2::{Digest, Sha256};
 
 const HEARTBEAT_INTERVAL: Duration = Duration::from_secs(5);
+const CLIENT_TIMEOUT: Duration = Duration::from_secs(10);
 
 pub struct Session {
+    pub hb: Instant,
     pub session_id: String,
     pub name: String,
+    pub room: String,
     pub addr: Addr<WSServer>,
 }
 
@@ -38,7 +41,15 @@ impl Handler<SessionMessage> for Session {
 impl Session {
     fn hb(&self, ctx: &mut ws::WebsocketContext<Self>) {
         ctx.run_interval(HEARTBEAT_INTERVAL, |act, ctx| {
-            println!("hearbeat check");
+            // check client heartbeats
+            if Instant::now().duration_since(act.hb) > CLIENT_TIMEOUT {
+                println!("Websocket Client heartbeat failed, disconnecting!");
+                // act.addr.do_send(server::Disconnect { id: act.id });
+                ctx.stop();
+                return;
+            }
+
+            ctx.ping(b"");
         });
     }
     fn receive_message(&mut self, ctx: &mut ws::WebsocketContext<Session>, text: String) {

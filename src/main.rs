@@ -33,6 +33,7 @@ async fn index(
             session_id: "".to_string(),
             name: "".to_string(),
             addr: srv.get_ref().clone(),
+            room: "".to_string(),
         },
         &req,
         stream,

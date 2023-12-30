@@ -6,8 +6,6 @@ use actix_web_actors::ws::{self};
 
 use crate::websocketservices::session::SessionMessage;
 
-use super::session::Session;
-
 #[derive(Message)]
 #[rtype(result = "()")]
 pub struct JoinRoom {
@@ -51,12 +49,11 @@ impl Handler<JoinRoom> for WSServer {
     type Result = ();
     fn handle(&mut self, msg: JoinRoom, _: &mut Context<Self>) -> Self::Result {
         println!("Received: {}", msg.name);
-        let msg_out = SessionMessage {
-            message: "join room ".to_string(),
-        };
-        let addr = msg.addr.do_send(msg_out);
 
-        // msg.addr.do_send(msg_out);
+        let msg_out = SessionMessage {
+            message: "room name: ".to_string() + &msg.name.to_string(),
+        };
+        msg.addr.do_send(msg_out);
     }
 }
 
