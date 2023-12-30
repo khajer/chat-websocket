@@ -104,6 +104,7 @@ impl Actor for Session {
             name: "test".to_string(),
             addr: ctx.address().recipient(),
         };
+
         self.addr.do_send(msg);
         Running::Stop
     }

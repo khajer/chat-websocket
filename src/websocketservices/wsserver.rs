@@ -1,5 +1,7 @@
 // use std::collections::HashMap;
 
+use std::collections::{HashMap, HashSet};
+
 use actix::prelude::*;
 use actix::{Actor, Message, StreamHandler};
 use actix_web_actors::ws::{self};
@@ -22,13 +24,18 @@ pub struct DISCONNECT {
 }
 
 pub struct WSServer {
-    // sessions: HashMap<usize, Recipient<Message>>,
-    // rooms: HashMap<String, HashSet<usize>>,
+    sessions: HashMap<usize, Recipient<SessionMessage>>, // <id, receient> like db
+    rooms: HashMap<String, HashSet<usize>>,
 }
 
 impl WSServer {
     pub fn new() -> WSServer {
-        WSServer {}
+        let mut rooms = HashMap::new();
+
+        WSServer {
+            sessions: HashMap::new(),
+            rooms: rooms,
+        }
     }
 }
 

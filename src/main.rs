@@ -1,3 +1,5 @@
+use std::time::Instant;
+
 use actix::{Actor, Addr};
 use actix_web::{
     get,
@@ -34,6 +36,7 @@ async fn index(
             name: "".to_string(),
             addr: srv.get_ref().clone(),
             room: "".to_string(),
+            hb: Instant::now(),
         },
         &req,
         stream,
