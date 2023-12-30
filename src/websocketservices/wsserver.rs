@@ -5,28 +5,9 @@ use std::collections::{HashMap, HashSet};
 use actix::prelude::*;
 use actix::{Actor, Message, StreamHandler};
 use actix_web_actors::ws::{self};
+use rand::Rng;
 
 use crate::websocketservices::session::SessionMessage;
-
-#[derive(Message)]
-#[rtype(result = "()")]
-pub struct JoinRoom {
-    pub name: String,
-    pub addr: Recipient<SessionMessage>,
-}
-
-#[derive(Message)]
-#[rtype(result = "()")]
-pub struct CONNECT {
-    pub id: usize,
-    pub addr: Recipient<SessionMessage>,
-}
-
-#[derive(Message)]
-#[rtype(result = "()")]
-pub struct DISCONNECT {
-    pub id: usize,
-}
 
 pub struct WSServer {
     sessions: HashMap<usize, Recipient<SessionMessage>>, // <id, receient> like db
@@ -58,6 +39,25 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for WSServer {
     }
 }
 
+#[derive(Message)]
+#[rtype(result = "()")]
+pub struct JoinRoom {
+    pub name: String,
+    pub addr: Recipient<SessionMessage>,
+}
+
+#[derive(Message)]
+#[rtype(result = "(usize)")]
+pub struct Connect {
+    pub addr: Recipient<SessionMessage>,
+}
+
+#[derive(Message)]
+#[rtype(result = "()")]
+pub struct Disconnect {
+    pub id: usize,
+}
+
 impl Handler<JoinRoom> for WSServer {
     type Result = ();
     fn handle(&mut self, msg: JoinRoom, _: &mut Context<Self>) -> Self::Result {
@@ -66,30 +66,32 @@ impl Handler<JoinRoom> for WSServer {
         let msg_out = SessionMessage {
             message: "room name: ".to_string() + &msg.name.to_string(),
         };
-        msg.addr.do_send(msg_out);
     }
 }
 
-impl Handler<CONNECT> for WSServer {
-    type Result = ();
-    fn handle(&mut self, msg: CONNECT, _: &mut Context<Self>) -> Self::Result {
-        println!("CONNECT: {}", msg.id);
-        self.sessions.insert(msg.id, msg.addr.clone());
+impl Handler<Connect> for WSServer {
+    type Result = usize;
+    fn handle(&mut self, msg: Connect, _: &mut Context<Self>) -> Self::Result {
+        let mut rng = rand::thread_rng();
+        let id: usize = rng.gen();
+
+        println!("CONNECT: {}", id);
+
+        self.sessions.insert(id, msg.addr.clone());
 
         let msg_out = SessionMessage {
-            message: format!("connect : {}", msg.id),
+            message: format!("connect : {}", id),
         };
-
-        msg.addr.do_send(msg_out);
-
         // default to main room
         // self.rooms.entry("main".to_owned()).or_default().insert(id);
+        msg.addr.do_send(msg_out);
+        id
     }
 }
 
-impl Handler<DISCONNECT> for WSServer {
+impl Handler<Disconnect> for WSServer {
     type Result = ();
-    fn handle(&mut self, msg: DISCONNECT, _: &mut Context<Self>) -> Self::Result {
+    fn handle(&mut self, msg: Disconnect, _: &mut Context<Self>) -> Self::Result {
         println!("DISCONNECT: {}", msg.id);
         self.sessions.remove(&msg.id);
     }

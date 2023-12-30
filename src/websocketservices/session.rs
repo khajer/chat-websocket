@@ -1,6 +1,6 @@
 use std::time::{Duration, Instant};
 
-use super::wsserver::{CONNECT, DISCONNECT};
+use super::wsserver::{Connect, Disconnect};
 use super::{message_service, wsserver::WSServer};
 use actix::prelude::*;
 use actix::{Actor, Addr, AsyncContext, StreamHandler};
@@ -83,19 +83,30 @@ impl Session {
 impl Actor for Session {
     type Context = ws::WebsocketContext<Self>;
     fn started(&mut self, ctx: &mut Self::Context) {
-        let mut rng = rand::thread_rng();
-        self.id = rng.gen();
-
         self.hb(ctx);
-        println!("WebSocket connection started with session ID: {}", self.id);
-        let msg = CONNECT {
-            id: self.id,
-            addr: ctx.address().recipient(),
-        };
-        self.addr.do_send(msg);
+        self.addr
+            .send(Connect {
+                addr: ctx.address().recipient(),
+            })
+            .into_actor(self)
+            .then(|res, act, ctx| {
+                match res {
+                    Ok(res) => act.id = res,
+                    _ => ctx.stop(),
+                }
+                fut::ready(())
+            })
+            .wait(ctx);
+
+        // println!("WebSocket connection started with session ID: {}", self.id);
+        // let msg = CONNECT {
+        //     id: self.id,
+        //     addr: ctx.address().recipient(),
+        // };
+        // self.addr.do_send(msg);
     }
     fn stopping(&mut self, _ctx: &mut Self::Context) -> Running {
-        let msg = DISCONNECT { id: self.id };
+        let msg = Disconnect { id: self.id };
         self.addr.do_send(msg);
 
         Running::Stop
