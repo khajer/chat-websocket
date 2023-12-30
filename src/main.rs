@@ -32,7 +32,7 @@ async fn index(
 ) -> Result<HttpResponse, Error> {
     let resp = ws::start(
         websocketservices::session::Session {
-            session_id: "".to_string(),
+            id: 0,
             name: "".to_string(),
             addr: srv.get_ref().clone(),
             room: "".to_string(),

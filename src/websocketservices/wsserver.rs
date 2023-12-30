@@ -17,10 +17,15 @@ pub struct JoinRoom {
 
 #[derive(Message)]
 #[rtype(result = "()")]
-pub struct DISCONNECT {
-    pub name: String,
-    // pub addr: Addr<Session>,
+pub struct CONNECT {
+    pub id: usize,
     pub addr: Recipient<SessionMessage>,
+}
+
+#[derive(Message)]
+#[rtype(result = "()")]
+pub struct DISCONNECT {
+    pub id: usize,
 }
 
 pub struct WSServer {
@@ -31,6 +36,7 @@ pub struct WSServer {
 impl WSServer {
     pub fn new() -> WSServer {
         let mut rooms = HashMap::new();
+        rooms.insert("main".to_owned(), HashSet::new());
 
         WSServer {
             sessions: HashMap::new(),
@@ -64,9 +70,27 @@ impl Handler<JoinRoom> for WSServer {
     }
 }
 
+impl Handler<CONNECT> for WSServer {
+    type Result = ();
+    fn handle(&mut self, msg: CONNECT, _: &mut Context<Self>) -> Self::Result {
+        println!("CONNECT: {}", msg.id);
+        self.sessions.insert(msg.id, msg.addr.clone());
+
+        let msg_out = SessionMessage {
+            message: format!("connect : {}", msg.id),
+        };
+
+        msg.addr.do_send(msg_out);
+
+        // default to main room
+        // self.rooms.entry("main".to_owned()).or_default().insert(id);
+    }
+}
+
 impl Handler<DISCONNECT> for WSServer {
     type Result = ();
     fn handle(&mut self, msg: DISCONNECT, _: &mut Context<Self>) -> Self::Result {
-        println!("DISCONNECT: {}", msg.name);
+        println!("DISCONNECT: {}", msg.id);
+        self.sessions.remove(&msg.id);
     }
 }

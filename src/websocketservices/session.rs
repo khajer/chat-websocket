@@ -1,8 +1,6 @@
 use std::time::{Duration, Instant};
 
-use crate::websocketservices::wsserver::JoinRoom;
-
-use super::wsserver::DISCONNECT;
+use super::wsserver::{CONNECT, DISCONNECT};
 use super::{message_service, wsserver::WSServer};
 use actix::prelude::*;
 use actix::{Actor, Addr, AsyncContext, StreamHandler};
@@ -15,7 +13,7 @@ const CLIENT_TIMEOUT: Duration = Duration::from_secs(10);
 
 pub struct Session {
     pub hb: Instant,
-    pub session_id: String,
+    pub id: usize,
     pub name: String,
     pub room: String,
     pub addr: Addr<WSServer>,
@@ -44,40 +42,33 @@ impl Session {
             // check client heartbeats
             if Instant::now().duration_since(act.hb) > CLIENT_TIMEOUT {
                 println!("Websocket Client heartbeat failed, disconnecting!");
+
                 // act.addr.do_send(server::Disconnect { id: act.id });
-                ctx.stop();
-                return;
+                // ctx.stop();
+                // return;
             }
 
             ctx.ping(b"");
         });
     }
     fn receive_message(&mut self, ctx: &mut ws::WebsocketContext<Session>, text: String) {
-        println!("[session_id:{}][message]: {}", self.session_id, text);
+        println!("[session_id:{}][message]: {}", self.id, text);
         let msg_input = message_service::parse_message_command(text.as_str());
         match msg_input.cmd.as_str() {
-            "joinroom" => {
-                println!("join room");
+            "name" => {
                 let params = msg_input.params.unwrap();
-                let msg = JoinRoom {
-                    name: params["name"].to_string(),
-                    addr: ctx.address().recipient(),
-                };
-                self.addr.do_send(msg);
+                println!("set name = {}", params["name"].to_string());
+                self.name = params["name"].to_string();
             }
-            // "lobby" => {
-            //     let params = msg_input.params.unwrap();
-            //     self.name = params["name"].to_string();
-            //     let msg = LOBBY {
-            //         name: "kha".to_string(),
-            //         addr: ctx.address(),
-            //     };
-            //     self.addr.do_send(msg);
-            //     println!(
-            //         "name login : {}, session_id : {}",
-            //         self.name, self.session_id
-            //     );
-            // }
+            "join" => {
+                println!("join room");
+                // let params = msg_input.params.unwrap();
+                // let msg = JoinRoom {
+                // name: params["name"].to_string(),
+                //     addr: ctx.address().recipient(),
+                // };
+                // self.addr.do_send(msg);
+            }
             "chat" => {
                 let params = msg_input.params.unwrap();
                 println!("{:}", params);
@@ -92,20 +83,21 @@ impl Session {
 impl Actor for Session {
     type Context = ws::WebsocketContext<Self>;
     fn started(&mut self, ctx: &mut Self::Context) {
+        let mut rng = rand::thread_rng();
+        self.id = rng.gen();
+
         self.hb(ctx);
-        self.session_id = generate_session_id();
-        println!(
-            "WebSocket connection started with session ID: {}",
-            self.session_id
-        );
-    }
-    fn stopping(&mut self, ctx: &mut Self::Context) -> Running {
-        let msg = DISCONNECT {
-            name: "test".to_string(),
+        println!("WebSocket connection started with session ID: {}", self.id);
+        let msg = CONNECT {
+            id: self.id,
             addr: ctx.address().recipient(),
         };
-
         self.addr.do_send(msg);
+    }
+    fn stopping(&mut self, _ctx: &mut Self::Context) -> Running {
+        let msg = DISCONNECT { id: self.id };
+        self.addr.do_send(msg);
+
         Running::Stop
     }
 }
