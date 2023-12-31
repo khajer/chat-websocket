@@ -43,11 +43,10 @@ impl Session {
             if Instant::now().duration_since(act.hb) > CLIENT_TIMEOUT {
                 println!("Websocket Client heartbeat failed, disconnecting!");
 
-                // act.addr.do_send(server::Disconnect { id: act.id });
-                // ctx.stop();
-                // return;
+                act.addr.do_send(Disconnect { id: act.id });
+                ctx.stop();
+                return;
             }
-
             ctx.ping(b"");
         });
     }
