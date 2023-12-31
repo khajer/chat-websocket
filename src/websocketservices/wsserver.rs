@@ -9,9 +9,11 @@ use rand::Rng;
 
 use crate::websocketservices::session::SessionMessage;
 
+use super::room::Room;
+
 pub struct WSServer {
     sessions: HashMap<usize, Recipient<SessionMessage>>, // <id, receient> like db
-    rooms: HashMap<String, HashSet<usize>>,
+    rooms: HashMap<String, Room>,
 }
 
 impl WSServer {
