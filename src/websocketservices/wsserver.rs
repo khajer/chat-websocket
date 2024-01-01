@@ -15,6 +15,11 @@ pub struct JoinRoom {
     pub name: String,
     pub id: usize,
 }
+#[derive(Message)]
+#[rtype(result = "(String)")]
+pub struct Name {
+    pub name: String,
+}
 
 #[derive(Message)]
 #[rtype(result = "(usize)")]
@@ -84,6 +89,13 @@ impl Handler<JoinRoom> for WSServer {
             .insert(msg.id);
 
         self.send_message_room(msg.name.clone(), "people come join".to_string());
+    }
+}
+
+impl Handler<Name> for WSServer {
+    type Result = String;
+    fn handle(&mut self, msg: Name, _: &mut Context<Self>) -> Self::Result {
+        msg.name
     }
 }
 

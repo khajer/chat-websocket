@@ -1,6 +1,6 @@
 use std::time::{Duration, Instant};
 
-use crate::websocketservices::wsserver::JoinRoom;
+use crate::websocketservices::wsserver::{JoinRoom, Name};
 
 use super::wsserver::{Connect, Disconnect};
 use super::{message_service, wsserver::WSServer};
@@ -44,7 +44,6 @@ impl Session {
             // check client heartbeats
             if Instant::now().duration_since(act.hb) > CLIENT_TIMEOUT {
                 println!("Websocket Client heartbeat failed, disconnecting!");
-
                 act.addr.do_send(Disconnect { id: act.id });
                 ctx.stop();
                 return;
@@ -60,6 +59,9 @@ impl Session {
                 let params = msg_input.params.unwrap();
                 println!("set name = {}", params["name"].to_string());
                 self.name = params["name"].to_string();
+                self.addr.do_send(Name {
+                    name: params["name"].to_string(),
+                });
             }
             "join" => {
                 println!("join room");
@@ -98,13 +100,6 @@ impl Actor for Session {
                 fut::ready(())
             })
             .wait(ctx);
-
-        // println!("WebSocket connection started with session ID: {}", self.id);
-        // let msg = CONNECT {
-        //     id: self.id,
-        //     addr: ctx.address().recipient(),
-        // };
-        // self.addr.do_send(msg);
     }
     fn stopping(&mut self, _ctx: &mut Self::Context) -> Running {
         let msg = Disconnect { id: self.id };
