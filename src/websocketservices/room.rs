@@ -7,7 +7,17 @@ pub enum RoomStatus {
 }
 
 pub struct Room {
-    members: HashSet<usize>,
-    owner: usize,
-    status: RoomStatus,
+    pub members: HashSet<usize>,
+    pub owner: usize,
+    pub status: RoomStatus,
+}
+
+impl Room {
+    pub fn new() -> Room {
+        Room {
+            members: HashSet::new(),
+            owner: 0,
+            status: RoomStatus::WAIT,
+        }
+    }
 }

@@ -1,5 +1,7 @@
 use std::time::{Duration, Instant};
 
+use crate::websocketservices::wsserver::JoinRoom;
+
 use super::wsserver::{Connect, Disconnect};
 use super::{message_service, wsserver::WSServer};
 use actix::prelude::*;
@@ -50,7 +52,7 @@ impl Session {
             ctx.ping(b"");
         });
     }
-    fn receive_message(&mut self, ctx: &mut ws::WebsocketContext<Session>, text: String) {
+    fn receive_message(&mut self, _ctx: &mut ws::WebsocketContext<Session>, text: String) {
         println!("[session_id:{}][message]: {}", self.id, text);
         let msg_input = message_service::parse_message_command(text.as_str());
         match msg_input.cmd.as_str() {
@@ -61,12 +63,12 @@ impl Session {
             }
             "join" => {
                 println!("join room");
-                // let params = msg_input.params.unwrap();
-                // let msg = JoinRoom {
-                // name: params["name"].to_string(),
-                //     addr: ctx.address().recipient(),
-                // };
-                // self.addr.do_send(msg);
+                let params = msg_input.params.unwrap();
+                let msg = JoinRoom {
+                    name: params["name"].to_string(),
+                    id: self.id,
+                };
+                self.addr.do_send(msg);
             }
             "chat" => {
                 let params = msg_input.params.unwrap();
