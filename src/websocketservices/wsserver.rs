@@ -33,6 +33,12 @@ pub struct Disconnect {
     pub id: usize,
 }
 
+#[derive(Message)]
+#[rtype(result = "()")]
+pub struct ChatMessage {
+    pub message: String,
+}
+
 pub struct WSServer {
     sessions: HashMap<usize, Recipient<SessionMessage>>, // <id, receient> like db
     rooms: HashMap<String, Room>,
@@ -122,5 +128,12 @@ impl Handler<Disconnect> for WSServer {
     fn handle(&mut self, msg: Disconnect, _: &mut Context<Self>) -> Self::Result {
         println!("DISCONNECT: {}", msg.id);
         self.sessions.remove(&msg.id);
+    }
+}
+
+impl Handler<ChatMessage> for WSServer {
+    type Result = ();
+    fn handle(&mut self, msg: ChatMessage, _: &mut Context<Self>) -> Self::Result {
+        println!("message = {}", msg.message);
     }
 }
