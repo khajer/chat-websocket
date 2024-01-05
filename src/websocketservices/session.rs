@@ -75,7 +75,7 @@ impl Session {
             "chat" => {
                 let params = msg_input.params.unwrap();
                 let msg = ChatMessage {
-                    message: "Test".to_string(),
+                    message: params["message"].to_string(),
                 };
                 self.addr.do_send(msg);
 
