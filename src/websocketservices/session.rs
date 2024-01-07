@@ -7,8 +7,7 @@ use super::{message_service, wsserver::WSServer};
 use actix::prelude::*;
 use actix::{Actor, Addr, AsyncContext, StreamHandler};
 use actix_web_actors::ws;
-use rand::Rng;
-use sha2::{Digest, Sha256};
+
 
 const HEARTBEAT_INTERVAL: Duration = Duration::from_secs(5);
 const CLIENT_TIMEOUT: Duration = Duration::from_secs(10);
