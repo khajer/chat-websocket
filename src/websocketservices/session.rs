@@ -78,7 +78,6 @@ impl Session {
                     message: params["message"].to_string(),
                 };
                 self.addr.do_send(msg);
-
                 println!("{:}", params);
             }
             _ => {
@@ -130,26 +129,5 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for Session {
             }
             _ => (),
         }
-    }
-}
-fn generate_session_id() -> String {
-    let mut rng = rand::thread_rng();
-    let random_number: usize = rng.gen();
-
-    let mut hasher = Sha256::new();
-    hasher.update(random_number.to_string());
-    let hash_result = hasher.finalize();
-
-    format!("{:x}", hash_result)
-}
-
-#[cfg(test)]
-mod test {
-    use super::*;
-
-    #[test]
-    fn generate_session_id_test() {
-        println!("session_id: {}", generate_session_id());
-        assert_eq!(3, 3);
     }
 }

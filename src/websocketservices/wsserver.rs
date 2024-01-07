@@ -1,9 +1,9 @@
-use std::collections::HashMap;
-
 use actix::prelude::*;
 use actix::{Actor, Message, StreamHandler};
 use actix_web_actors::ws::{self};
 use rand::Rng;
+use sha2::{Digest, Sha256};
+use std::collections::HashMap;
 
 use crate::websocketservices::session::SessionMessage;
 
@@ -135,5 +135,27 @@ impl Handler<ChatMessage> for WSServer {
     type Result = ();
     fn handle(&mut self, msg: ChatMessage, _: &mut Context<Self>) -> Self::Result {
         println!("message = {}", msg.message);
+    }
+}
+
+fn generate_session_id() -> String {
+    let mut rng = rand::thread_rng();
+    let random_number: usize = rng.gen();
+
+    let mut hasher = Sha256::new();
+    hasher.update(random_number.to_string());
+    let hash_result = hasher.finalize();
+
+    format!("{:x}", hash_result)
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn generate_session_id_test() {
+        println!("session_id: {}", generate_session_id());
+        assert_eq!(3, 3);
     }
 }
