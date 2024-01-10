@@ -39,6 +39,10 @@ pub struct ChatMessage {
     pub message: String,
 }
 
+#[derive(Message)]
+#[rtype(result = "(String)")]
+pub struct ListRoom;
+
 pub struct WSServer {
     sessions: HashMap<usize, Recipient<SessionMessage>>, // <id, receient> like db
     rooms: HashMap<String, Room>,
@@ -67,8 +71,16 @@ impl WSServer {
                 }
             }
         }
+    }
+    pub fn list_room(&mut self) -> String {
+        let rooms: Vec<&String> = self.rooms.keys().clone().collect();
+        println!("list room {:?}", rooms);
 
-        println!("message room");
+        rooms
+            .into_iter()
+            .map(|s| format!("{}", s))
+            .collect::<Vec<_>>()
+            .join(",")
     }
 }
 
@@ -82,6 +94,13 @@ impl Actor for WSServer {
 impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for WSServer {
     fn handle(&mut self, _msg: Result<ws::Message, ws::ProtocolError>, _ctx: &mut Self::Context) {
         println!("In comming Server");
+    }
+}
+
+impl Handler<ListRoom> for WSServer {
+    type Result = String;
+    fn handle(&mut self, msg: ListRoom, ctx: &mut Self::Context) -> Self::Result {
+        self.list_room()
     }
 }
 

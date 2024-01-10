@@ -1,13 +1,12 @@
 use std::time::{Duration, Instant};
 
-use crate::websocketservices::wsserver::{ChatMessage, JoinRoom, Name};
+use crate::websocketservices::wsserver::{ChatMessage, JoinRoom, ListRoom, Name};
 
 use super::wsserver::{Connect, Disconnect};
 use super::{message_service, wsserver::WSServer};
 use actix::prelude::*;
 use actix::{Actor, Addr, AsyncContext, StreamHandler};
 use actix_web_actors::ws;
-
 
 const HEARTBEAT_INTERVAL: Duration = Duration::from_secs(5);
 const CLIENT_TIMEOUT: Duration = Duration::from_secs(10);
@@ -50,7 +49,7 @@ impl Session {
             ctx.ping(b"");
         });
     }
-    fn receive_message(&mut self, _ctx: &mut ws::WebsocketContext<Session>, text: String) {
+    fn receive_message(&mut self, ctx: &mut ws::WebsocketContext<Session>, text: String) {
         println!("[session_id:{}][message]: {}", self.id, text);
         let msg_input = message_service::parse_message_command(text.as_str());
         match msg_input.cmd.as_str() {
@@ -70,6 +69,19 @@ impl Session {
                     id: self.id,
                 };
                 self.addr.do_send(msg);
+            }
+            "list" => {
+                self.addr
+                    .send(ListRoom)
+                    .into_actor(self)
+                    .then(|res, act, ctx| {
+                        match res {
+                            Ok(res) => ctx.text(res),
+                            _ => ctx.text("list room error"),
+                        }
+                        fut::ready(())
+                    })
+                    .wait(ctx);
             }
             "chat" => {
                 let params = msg_input.params.unwrap();
