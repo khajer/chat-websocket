@@ -15,6 +15,14 @@ pub struct JoinRoom {
     pub name: String,
     pub id: usize,
 }
+
+#[derive(Message)]
+#[rtype(result = "()")]
+pub struct LeftRoom {
+    pub name: String,
+    pub id: usize,
+}
+
 #[derive(Message)]
 #[rtype(result = "(String)")]
 pub struct Name {
@@ -114,6 +122,19 @@ impl Handler<JoinRoom> for WSServer {
             .insert(msg.id);
 
         self.send_message_room(msg.name.clone(), "people come join".to_string());
+    }
+}
+
+impl Handler<LeftRoom> for WSServer {
+    type Result = ();
+    fn handle(&mut self, msg: LeftRoom, _: &mut Context<Self>) -> Self::Result {
+        self.rooms
+            .entry(msg.name.clone())
+            .or_insert_with(Room::new)
+            .members
+            .remove(&msg.id);
+
+        self.send_message_room(msg.name.clone(), "people left join".to_string());
     }
 }
 

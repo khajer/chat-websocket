@@ -1,6 +1,6 @@
 use std::time::{Duration, Instant};
 
-use crate::websocketservices::wsserver::{ChatMessage, JoinRoom, ListRoom, Name};
+use crate::websocketservices::wsserver::{ChatMessage, JoinRoom, LeftRoom, ListRoom, Name};
 
 use super::wsserver::{Connect, Disconnect};
 use super::{message_service, wsserver::WSServer};
@@ -67,6 +67,15 @@ impl Session {
                 let msg = JoinRoom {
                     name: params["name"].to_string(),
                     id: self.id,
+                };
+                self.room = params["name"].to_string();
+                self.addr.do_send(msg);
+            }
+            "left" => {
+                println!("left room");
+                let msg = LeftRoom {
+                    id: self.id,
+                    name: self.room.clone(),
                 };
                 self.addr.do_send(msg);
             }
