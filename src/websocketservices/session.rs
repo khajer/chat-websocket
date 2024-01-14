@@ -83,7 +83,7 @@ impl Session {
                 self.addr
                     .send(ListRoom)
                     .into_actor(self)
-                    .then(|res, act, ctx| {
+                    .then(|res, _act, ctx| {
                         match res {
                             Ok(res) => ctx.text(res),
                             _ => ctx.text("list room error"),
