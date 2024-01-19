@@ -1,13 +1,14 @@
-use std::time::Instant;
-
 use actix::{Actor, Addr};
 use actix_web::{
     get,
+    middleware::Logger,
     web::{self},
     Error, HttpRequest, HttpResponse, Responder, Result,
 };
 use actix_web_actors::ws;
+use env_logger::Env;
 use serde::Serialize;
+use std::time::Instant;
 use websocketservices::wsserver::WSServer;
 
 mod websocketservices;
@@ -46,10 +47,14 @@ async fn index(
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
+    env_logger::init_from_env(Env::default().default_filter_or("info"));
+
     let server = websocketservices::wsserver::WSServer::new().start();
     use actix_web::{App, HttpServer};
     HttpServer::new(move || {
         App::new()
+            .wrap(Logger::default())
+            .wrap(Logger::new("%a %{User-Agent}i"))
             .app_data(server.clone())
             .app_data(web::Data::new(server.clone()))
             .service(version)
